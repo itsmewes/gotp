@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	badger "github.com/dgraph-io/badger/v2"
 )
 
 func main() {
@@ -20,15 +22,68 @@ func main() {
 	args := flag.Args()
 
 	if len(args) == 0 {
-		check(errors.New("Please add a passphrase."))
+		check(errors.New("Please add something, anything... I don't know what you want from me."))
+		return
 	}
 
-	otp := getTOTPToken(args[0])
+	if args[0] == "add" {
+		addToken(args[1], args[2])
+		return
+	}
 
-	fmt.Println("\n" + otp)
+	getOtp(args[0])
+}
 
-	//Copies the otp generated to your clipboard
-	err := exec.Command("bash", "-c", fmt.Sprintf("echo %s | tr -d \"\n, \" | pbcopy", otp)).Run()
+func addToken(key string, secret string) {
+	db, err := badger.Open(badger.DefaultOptions("/tmp/gotp"))
+	if err != nil {
+		check(err)
+	}
+	defer db.Close()
+
+	txn := db.NewTransaction(true)
+	defer txn.Discard()
+
+	// Use the transaction...
+	err = txn.Set([]byte(key), []byte(secret))
+	if err != nil {
+		check(err)
+	}
+
+	// Commit the transaction and check for error.
+	if err := txn.Commit(); err != nil {
+		check(err)
+		return
+	}
+
+	fmt.Println("Your key and secret have been saved")
+}
+
+func getOtp(key string) {
+	db, err := badger.Open(badger.DefaultOptions("/tmp/gotp"))
+	if err != nil {
+		check(err)
+	}
+	defer db.Close()
+
+	err = db.View(func(txn *badger.Txn) error {
+		token, err := txn.Get([]byte(key))
+		if err != nil {
+			return err
+		}
+
+		otp := getTOTPToken(token.String())
+
+		fmt.Println("Your otp is:" + otp)
+		fmt.Println(otp + " has been copied to your clipboard")
+
+		//Copies the otp generated to your clipboard
+		err = exec.Command("bash", "-c", fmt.Sprintf("echo %s | tr -d \"\n, \" | pbcopy", otp)).Run()
+		check(err)
+
+		return nil
+	})
+
 	check(err)
 }
 
