@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/base32"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -18,6 +19,27 @@ import (
 )
 
 var db *badger.DB
+
+type Items struct {
+	Items []Item `json:"items"`
+}
+type Item struct {
+	Type         string `json:"type"`
+	Title        string `json:"title"`
+	Arg          string `json:"arg"`
+	Autocomplete string `json:"autocomplete"`
+}
+
+func (i *Items) AddTo(key string) []Item {
+	i.Items = append(i.Items, Item{
+		Type:         "default",
+		Title:        key,
+		Arg:          key,
+		Autocomplete: key,
+	})
+
+	return i.Items
+}
 
 func main() {
 	var err error
@@ -51,7 +73,17 @@ func main() {
 		return
 	}
 
-	getOtp(args[0])
+	if args[0] == "lsJson" {
+		listJson()
+		return
+	}
+
+	if args[0] == "get" {
+		getOtp(args[1], "simple")
+		return
+	}
+
+	getOtp(args[0], "terminal")
 }
 
 func listKeys() {
@@ -75,6 +107,34 @@ func listKeys() {
 	}
 }
 
+func listJson() {
+	items := new(Items)
+	err := db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k := item.Key()
+			items.AddTo(string(k))
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	b, err := json.Marshal(items)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(b))
+}
+
 func addToken(key string, secret string) {
 	txn := db.NewTransaction(true)
 	defer txn.Discard()
@@ -94,7 +154,7 @@ func addToken(key string, secret string) {
 	fmt.Println("Your key and secret have been saved")
 }
 
-func getOtp(key string) {
+func getOtp(key string, output string) {
 	err := db.View(func(txn *badger.Txn) error {
 		var token string
 		item, err := txn.Get([]byte(key))
@@ -112,8 +172,12 @@ func getOtp(key string) {
 
 		otp := getTOTPToken(token)
 
-		fmt.Println("Your otp is:" + otp)
-		fmt.Println(otp + " has been copied to your clipboard")
+		if output == "terminal" {
+			fmt.Println("Your otp is:" + otp)
+			fmt.Println(otp + " has been copied to your clipboard")
+		} else {
+			fmt.Println(otp)
+		}
 
 		//Copies the otp generated to your clipboard
 		err = exec.Command("bash", "-c", fmt.Sprintf("echo %s | tr -d \"\n, \" | pbcopy", otp)).Run()
@@ -161,7 +225,7 @@ func getOtpByIndex(index int) {
 		return
 	}
 
-	getOtp(key)
+	getOtp(key, "terminal")
 }
 
 func getTOTPToken(secret string) string {
