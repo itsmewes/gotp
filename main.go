@@ -109,6 +109,7 @@ func listKeys() {
 
 func listJson() {
 	items := new(Items)
+
 	err := db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
