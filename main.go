@@ -64,7 +64,8 @@ func main() {
 	}
 
 	if args[0] == "add" {
-		addToken(args[1], args[2])
+		l := len(args)
+		addToken(strings.Join(args[1:(l - 1)], " "), args[l-1])
 		return
 	}
 
@@ -79,11 +80,12 @@ func main() {
 	}
 
 	if args[0] == "get" {
-		getOtp(args[1], "simple")
+		l := len(args)
+		getOtp(strings.Join(args[1:l], " "), "simple")
 		return
 	}
 
-	getOtp(args[0], "terminal")
+	getOtp(strings.Join(args, " "), "terminal")
 }
 
 func listKeys() {
@@ -170,6 +172,7 @@ func getOtp(key string, output string) {
 		if err != nil {
 			return err
 		}
+
 
 		otp := getTOTPToken(token)
 
