@@ -232,6 +232,17 @@ func getOtpByIndex(index int) {
 	getOtp(key, "terminal")
 }
 
+func initDb() (*badger.DB, error) {
+	options := badger.DefaultOptions("/tmp/gotp")
+	options.Logger = nil
+
+	db, err := badger.Open(options)
+
+	return db, err
+}
+
+// The code below has been taken from https://blog.gojekengineering.com/a-diy-two-factor-authenticator-in-golang-32e5641f6ec5
+// Thank you Tilak Lodha for writing the article.
 func getTOTPToken(secret string) string {
 	//The TOTP token is just a HOTP token seeded with every 30 seconds.
 	interval := time.Now().Unix() / 30
@@ -287,13 +298,4 @@ func prefix0(otp string) string {
 		otp = "0" + otp
 	}
 	return otp
-}
-
-func initDb() (*badger.DB, error) {
-	options := badger.DefaultOptions("/tmp/gotp")
-	options.Logger = nil
-
-	db, err := badger.Open(options)
-
-	return db, err
 }
