@@ -65,12 +65,23 @@ func main() {
 
 	if args[0] == "add" {
 		l := len(args)
-		addToken(strings.Join(args[1:(l - 1)], " "), args[l-1])
+		addToken(strings.Join(args[1:(l-1)], " "), args[l-1])
 		return
 	}
 
 	if args[0] == "ls" {
 		listKeys()
+		return
+	}
+
+	if args[0] == "rm" {
+		if index, err := strconv.Atoi(args[1]); err == nil {
+			removeKeyByIndex(index)
+			return
+		}
+
+		l := len(args)
+		removeKey(strings.Join(args[1:l], " "))
 		return
 	}
 
@@ -157,6 +168,55 @@ func addToken(key string, secret string) {
 	fmt.Println("Your key and secret have been saved")
 }
 
+func removeKey(key string) {
+	err := db.Update(func(txn *badger.Txn) error {
+		err := txn.Delete([]byte(key))
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s has been removed", key)
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func removeKeyByIndex(index int) {
+	err := db.Update(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		i := 1
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			if index != i {
+				i++
+				continue
+			}
+
+			item := it.Item()
+			err := txn.Delete(item.Key())
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s has been removed", string(item.Key()))
+
+			break
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func getOtp(key string, output string) {
 	err := db.View(func(txn *badger.Txn) error {
 		var token string
@@ -172,7 +232,6 @@ func getOtp(key string, output string) {
 		if err != nil {
 			return err
 		}
-
 
 		otp := getTOTPToken(token)
 
