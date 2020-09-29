@@ -292,7 +292,7 @@ func getOtpByIndex(index int) {
 }
 
 func initDb() (*badger.DB, error) {
-	options := badger.DefaultOptions("/tmp/gotp")
+	options := badger.DefaultOptions("/.config/gotp")
 	options.Logger = nil
 
 	db, err := badger.Open(options)
