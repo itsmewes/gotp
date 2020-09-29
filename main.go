@@ -10,7 +10,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
+	"os/user"
 	"strconv"
 	"strings"
 	"time"
@@ -292,7 +295,15 @@ func getOtpByIndex(index int) {
 }
 
 func initDb() (*badger.DB, error) {
-	options := badger.DefaultOptions("/.config/gotp")
+	usr, err := user.Current()
+    if err != nil {
+        log.Fatal( err )
+    }
+    
+	dbPath := usr.HomeDir + "/.config/gotp"
+	os.MkdirAll(dbPath, os.ModePerm)
+
+	options := badger.DefaultOptions(dbPath)
 	options.Logger = nil
 
 	db, err := badger.Open(options)
