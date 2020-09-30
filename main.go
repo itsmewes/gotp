@@ -238,17 +238,16 @@ func getOtp(key string, output string) {
 
 		otp := getTOTPToken(token)
 
-		if output == "terminal" {
+		if output == "simple" {
+			fmt.Println(otp)
+		} else {
+			//Copies the otp generated to your clipboard
+			err = exec.Command("bash", "-c", fmt.Sprintf("echo %s | tr -d \"\n, \" | pbcopy", otp)).Run()
+			if err != nil {
+				return err
+			}
 			fmt.Println("Your otp is:" + otp)
 			fmt.Println(otp + " has been copied to your clipboard")
-		} else {
-			fmt.Println(otp)
-		}
-
-		//Copies the otp generated to your clipboard
-		err = exec.Command("bash", "-c", fmt.Sprintf("echo %s | tr -d \"\n, \" | pbcopy", otp)).Run()
-		if err != nil {
-			return err
 		}
 
 		return nil
