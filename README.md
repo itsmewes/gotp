@@ -28,7 +28,17 @@ or you could use the index from `gotp ls`
 ```
 gotp 2
 ```
-The main difference between the above commands is that get is a simple returning of the ky where without get prints out a statement of the key being added to your clipboard. In both cases the key is added to the clipboard. The simplified version (with the get key word) is for piping to other utilities.
+The main difference between the above commands is that `get` is a simple returning/printing of the key where without `get` the key is added to your clipboard and prints out a statement of the key being added to your clipboard. The simplified version (with the `get` key word) is for piping to other utilities.
+
+### Remove keys
+```
+gotp rm key
+gotp rm key - local
+```
+or you could use the index from `gotp ls`
+```
+gotp rm 2
+```
 
 ## Usage for Alfred
 There are some commands that I have added in so I can use this tool in conjuction with Alfred (a Mac app utility.)
