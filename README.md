@@ -30,6 +30,12 @@ gotp 2
 ```
 The main difference between the above commands is that `get` is a simple returning/printing of the key where without `get` the key is added to your clipboard and prints out a statement of the key being added to your clipboard. The simplified version (with the `get` key word) is for piping to other utilities.
 
+### Get OTP via prompt
+```
+gotp 
+```
+If you only type `gotp` a prompt will be brought up of the keys that have been stored. You can use this prompt to select the key you want to use.
+
 ### Remove keys
 ```
 gotp rm key

@@ -7,7 +7,6 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	badger "github.com/dgraph-io/badger/v2"
+	"github.com/manifoldco/promptui"
 )
 
 var db *badger.DB
@@ -31,6 +31,21 @@ type Item struct {
 	Title        string `json:"title"`
 	Arg          string `json:"arg"`
 	Autocomplete string `json:"autocomplete"`
+}
+
+var (
+	Red     = Color("\033[1;31m%s\033[0m")
+	Green   = Color("\033[01;32m%s\033[0m")
+	Blue    = Color("\033[1;34m%s\033[0m")
+	Magenta = Color("\033[1;35m%s\033[0m")
+)
+
+func Color(colorString string) func(...interface{}) string {
+	sprint := func(args ...interface{}) string {
+		return fmt.Sprintf(colorString,
+			fmt.Sprint(args...))
+	}
+	return sprint
 }
 
 func (i *Items) AddTo(key string) []Item {
@@ -51,13 +66,24 @@ func main() {
 
 	db, err = initDb()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 		return
 	}
 	defer db.Close()
 
 	if len(args) == 0 {
-		fmt.Println(errors.New("Please add something, anything... I don't know what you want from me."))
+		prompt()
+		return
+	}
+
+	if args[0] == "help" {
+		fmt.Printf("%s\n", Green("WELCOME TO GOTP"))
+		fmt.Printf("%s\n\n", "The purpose of this package is to help with getting a 2FA otp without having to go through the shlep of taking your phone out and typing in the otp (though it's probably meant to be tedious... security via tediousnessness).")
+		fmt.Printf("%s\n%s\n%s\n%s\n%s\n\n", Green("ADD A NEW TOKEN"), Magenta("gotp add key token."), "eg:", Blue("gotp add key 564HJKHJKHKKKHGJKHJKYUFHFGHJ65E"), Blue("gotp add key - local 564HJKHJKHKKKHGJKHJKYUFHFGHJ65E"))
+		fmt.Printf("%s\n%s\n%s\n%s\n%s\n\n", Green("LIST KEYS"), Blue("gotp ls"), "And example of the output would be:", Magenta("1: key"), Magenta("2: key - local"))
+		fmt.Printf("%s\n%s\n%s\n%s\n%s\n%s\n\n", Green("GET OTP"), Magenta("gotp key"), Magenta("gotp get key"), "or you could use the index from gotp ls", Blue("gotp 2"), "The main difference between the above commands is that get is a simple returning/printing of the key where without get the key is added to your clipboard and prints out a statement of the key being added to your clipboard. The simplified version (with the get key word) is for piping to other utilities.")
+		fmt.Printf("%s\n%s\n%s %s %s\n\n", Green("GET OTP VIA PROMPT"), Magenta("gotp"), "If you only type", Blue("gotp"), "a prompt will be brought up of the keys that have been stored. You can use this prompt to select the key you want to use.")
+		fmt.Printf("%s\n%s\n%s\n%s\n%s\n", Green("REMOVE KEYS"), Magenta("gotp rm key"), Magenta("gotp rm key - local"), "or you could use the index from gotp ls", Blue("gotp rm 2"))
 		return
 	}
 
@@ -102,6 +128,51 @@ func main() {
 	getOtp(strings.Join(args, " "), "terminal")
 }
 
+func prompt() {
+	keys := getKeyList()
+
+	if len(keys) == 0 {
+		fmt.Printf("%s\n%s\n%s", Magenta("You don't have any otp's saved yet."), "Try adding one by typing:", Blue("gotp add key token"))
+		return
+	}
+
+	prompt := promptui.Select{
+		Label: "Select a key",
+		Items: keys,
+	}
+
+	_, key, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", Red(err))
+		return
+	}
+
+	getOtp(key, "terminal")
+}
+
+func getKeyList() []string {
+	var keys []string
+	err := db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			keys = append(keys, string(item.Key()))
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(Red(err))
+		return []string{}
+	}
+
+	return keys
+}
+
 func listKeys() {
 	err := db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -119,7 +190,7 @@ func listKeys() {
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 }
 
@@ -140,13 +211,13 @@ func listJson() {
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 		return
 	}
 
 	b, err := json.Marshal(items)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 		return
 	}
 	fmt.Println(string(b))
@@ -159,12 +230,12 @@ func addToken(key string, secret string) {
 	// Use the transaction...
 	err := txn.Set([]byte(key), []byte(secret))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 
 	// Commit the transaction and check for error.
 	if err := txn.Commit(); err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 		return
 	}
 
@@ -178,13 +249,13 @@ func removeKey(key string) {
 			return err
 		}
 
-		fmt.Printf("%s has been removed", key)
+		fmt.Printf("%s has been removed", Green(key))
 
 		return nil
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 }
 
@@ -207,7 +278,7 @@ func removeKeyByIndex(index int) {
 				return err
 			}
 
-			fmt.Printf("%s has been removed", string(item.Key()))
+			fmt.Printf("%s has been removed", Green(string(item.Key())))
 
 			break
 		}
@@ -216,7 +287,7 @@ func removeKeyByIndex(index int) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 }
 
@@ -246,15 +317,14 @@ func getOtp(key string, output string) {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Your otp is:" + otp)
-			fmt.Println(otp + " has been copied to your clipboard")
+			fmt.Printf("Your otp is: %s\n%s has been copied to your clipboard\n", Green(otp), Green(otp))
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 }
 
@@ -281,12 +351,12 @@ func getOtpByIndex(index int) {
 	})
 
 	if key == "" {
-		fmt.Println("Could not find your key")
+		fmt.Println(Magenta("Could not find your key"))
 		return
 	}
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 		return
 	}
 
@@ -295,10 +365,10 @@ func getOtpByIndex(index int) {
 
 func initDb() (*badger.DB, error) {
 	usr, err := user.Current()
-    if err != nil {
-        log.Fatal( err )
-    }
-    
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	dbPath := usr.HomeDir + "/.config/gotp"
 	os.MkdirAll(dbPath, os.ModePerm)
 
@@ -323,7 +393,7 @@ func getHOTPToken(secret string, interval int64) string {
 	//subset of the twenty-six letters A–Z and ten digits 0–9
 	key, err := base32.StdEncoding.DecodeString(strings.ToUpper(secret))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 	bs := make([]byte, 8)
 	binary.BigEndian.PutUint64(bs, uint64(interval))
@@ -345,7 +415,7 @@ func getHOTPToken(secret string, interval int64) string {
 	err = binary.Read(r, binary.BigEndian, &header)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(Red(err))
 	}
 	//Ignore most significant bits as per RFC 4226.
 	//Takes division from one million to generate a remainder less than < 7 digits
