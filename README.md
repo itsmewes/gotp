@@ -35,6 +35,7 @@ The main difference between the above commands is that `get` is a simple returni
 gotp 
 ```
 If you only type `gotp` a prompt will be brought up of the keys that have been stored. You can use this prompt to select the key you want to use.
+The prompt being used is "github.com/manifoldco/promptui".
 
 ### Remove keys
 ```
