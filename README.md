@@ -54,3 +54,8 @@ There are some commands that I have added in so I can use this tool in conjuctio
 ```
 gotp lsJson
 ```
+
+### Search for keys, return in json format
+```
+gotp queryJson query
+```

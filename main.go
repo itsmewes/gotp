@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -48,10 +49,10 @@ func Color(colorString string) func(...interface{}) string {
 	return sprint
 }
 
-func (i *Items) AddTo(key string) []Item {
+func (i *Items) AddTo(title, key string) []Item {
 	i.Items = append(i.Items, Item{
 		Type:         "default",
-		Title:        key,
+		Title:        title,
 		Arg:          key,
 		Autocomplete: key,
 	})
@@ -114,14 +115,20 @@ func main() {
 		return
 	}
 
+	if args[0] == "get" {
+		l := len(args)
+		getOtp(strings.Join(args[1:l], " "), "simple")
+		return
+	}
+
 	if args[0] == "lsJson" {
 		listJson()
 		return
 	}
 
-	if args[0] == "get" {
+	if args[0] == "queryJson" {
 		l := len(args)
-		getOtp(strings.Join(args[1:l], " "), "simple")
+		queryJson(strings.Join(args[1:l], " "))
 		return
 	}
 
@@ -192,35 +199,6 @@ func listKeys() {
 	if err != nil {
 		fmt.Println(Red(err))
 	}
-}
-
-func listJson() {
-	items := new(Items)
-
-	err := db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			k := item.Key()
-			items.AddTo(string(k))
-		}
-		return nil
-	})
-
-	if err != nil {
-		fmt.Println(Red(err))
-		return
-	}
-
-	b, err := json.Marshal(items)
-	if err != nil {
-		fmt.Println(Red(err))
-		return
-	}
-	fmt.Println(string(b))
 }
 
 func addToken(key string, secret string) {
@@ -361,6 +339,73 @@ func getOtpByIndex(index int) {
 	}
 
 	getOtp(key, "terminal")
+}
+
+func listJson() {
+	items := new(Items)
+
+	err := db.View(func(txn *badger.Txn) error {
+		var k string
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k = string(item.Key())
+			items.AddTo(k, k)
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(Red(err))
+		return
+	}
+
+	b, err := json.Marshal(items)
+	if err != nil {
+		fmt.Println(Red(err))
+		return
+	}
+	fmt.Println(string(b))
+}
+
+func queryJson(query string) {
+	var key string
+	items := new(Items)
+	keys := getKeyList()
+
+	for _, k := range keys {
+		key = string(k)
+		if strings.Contains(key, query) {
+			items.AddTo(key, key)
+		}
+	}
+
+	matchAdd, _ := regexp.MatchString("^ad?d?", query)
+	if matchAdd {
+		items.AddTo("Add", query)
+	}
+
+	matchRm, _ := regexp.MatchString("^rm?", query)
+	if matchRm {
+		query = strings.Trim(strings.Replace(query, "rm", "", -1), " ")
+		for _, k := range keys {
+			key = string(k)
+			if query == "" || strings.Contains(key, query) {
+				items.AddTo("Remove "+key, "rm " + key)
+			}
+		}
+	}
+
+	b, err := json.Marshal(items)
+	if err != nil {
+		fmt.Println(Red(err))
+		return
+	}
+
+	fmt.Println(string(b))
 }
 
 func initDb() (*badger.DB, error) {
