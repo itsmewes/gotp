@@ -1,6 +1,30 @@
 # gotp
 Handling Google Authenitcator codes in your terminal
 
+![gotp logo](https://raw.githubusercontent.com/itsmewes/gotp/master/images/logo.png "gotp logo")
+
+![Walkthrough](https://raw.githubusercontent.com/itsmewes/gotp/master/images/gotp-walkthrough "Walkthrough")
+
+## Getting started
+
+### Grab the binary
+The quickest way to get set up is to download the latest binary from [https://github.com/itsmewes/gotp/releases](releases)
+
+### Build from source
+This project make use of these great projects [https://github.com/dgraph-io/badger/](Badger) and [https://github.com/manifoldco/promptui](promptui).
+Make sure to get them installed:
+
+#### Badger
+`go get github.com/dgraph-io/badger/v2`
+
+#### promptui
+`go get github.com/manifoldco/promptui`
+
+Once you have the dependencies installed, clone the master branch to you computer:
+`git clone https://github.com/itsmewes/gotp.git`
+
+When the cloning is complete `cd` into the newly created gotp folder and run `go install .` or `go build .` to create a new binary. Make sure that your go bin folder is in your PATH or that you move the binary after building to somewhere like `/usr/local/bin` for you to easily reference it in your terminal.
+
 ## Usage
 
 ### Add a new token
