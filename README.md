@@ -3,7 +3,7 @@ Handling Google Authenitcator codes in your terminal
 
 ![gotp logo](https://raw.githubusercontent.com/itsmewes/gotp/master/images/logo.png "gotp logo")
 
-![Walkthrough](https://raw.githubusercontent.com/itsmewes/gotp/master/images/gotp-walkthrough "Walkthrough")
+![Walkthrough](https://raw.githubusercontent.com/itsmewes/gotp/master/images/gotp-walkthrough.gif "Walkthrough")
 
 ## Getting started
 
