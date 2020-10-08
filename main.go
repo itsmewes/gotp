@@ -128,7 +128,7 @@ func main() {
 
 	if args[0] == "queryJson" {
 		l := len(args)
-		queryJson(strings.Join(args[1:l], " "))
+		queryJson(args[1:l])
 		return
 	}
 
@@ -303,7 +303,7 @@ func getOtp(key string, output string) {
 			if err != nil {
 				return err
 			}
-			
+
 			fmt.Printf("%s has been copied to your clipboard\n", Green(otp))
 		}
 
@@ -380,30 +380,38 @@ func listJson() {
 	fmt.Println(string(b))
 }
 
-func queryJson(query string) {
+func queryJson(query []string) {
 	var key string
+	var action string
+	
 	items := new(Items)
 	keys := getKeyList()
+	l := len(query)
 
-	for _, k := range keys {
-		key = string(k)
-		if strings.Contains(key, query) {
-			items.AddTo(key, key)
+	if l > 0 {
+		action = query[0]
+	}
+
+	matchAdd, _ := regexp.MatchString("^ad?d?", action)
+	if matchAdd {
+		items.AddTo("Add", strings.Join(query, " "))
+	}
+
+	matchRm, _ := regexp.MatchString("^rm?", action)
+	if matchRm {
+		for _, k := range keys {
+			key = string(k)
+			if l == 1 || testQuery(query[1:], key) {
+				items.AddTo("Remove "+key, "rm "+key)
+			}
 		}
 	}
 
-	matchAdd, _ := regexp.MatchString("^ad?d?", query)
-	if matchAdd {
-		items.AddTo("Add", query)
-	}
-
-	matchRm, _ := regexp.MatchString("^rm?", query)
-	if matchRm {
-		query = strings.Trim(strings.Replace(query, "rm", "", -1), " ")
+	if l == 0 || (!matchAdd && !matchRm) {
 		for _, k := range keys {
 			key = string(k)
-			if query == "" || strings.Contains(key, query) {
-				items.AddTo("Remove "+key, "rm "+key)
+			if l == 0 || testQuery(query, key) {
+				items.AddTo(key, key)
 			}
 		}
 	}
@@ -415,6 +423,16 @@ func queryJson(query string) {
 	}
 
 	fmt.Println(string(b))
+}
+
+func testQuery(query []string, key string) bool {
+	for _, q := range query {
+		if !strings.Contains(key, q) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func initDb() (*badger.DB, error) {
