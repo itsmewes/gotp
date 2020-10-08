@@ -1,17 +1,17 @@
 ![gotp logo](https://raw.githubusercontent.com/itsmewes/gotp/master/images/logo.png "gotp logo")
 
 # gotp
-Handling Google Authenitcator codes in your terminal
+Handling Google Authenticator codes in your terminal
 
 ![Walkthrough](https://raw.githubusercontent.com/itsmewes/gotp/master/images/gotp-walkthrough.gif "Walkthrough")
 
 ## Getting started
 
 ### Grab the binary
-The quickest way to get set up is to download the latest binary from [https://github.com/itsmewes/gotp/releases](releases)
+The quickest way to get set up is to download the latest binary from [releases](https://github.com/itsmewes/gotp/releases)
 
 ### Build from source
-This project make use of these great projects [https://github.com/dgraph-io/badger/](Badger) and [https://github.com/manifoldco/promptui](promptui).
+This project make use of these great projects [Badger](https://github.com/dgraph-io/badger/) and [promptui](https://github.com/manifoldco/promptui).
 Make sure to get them installed:
 
 #### Badger

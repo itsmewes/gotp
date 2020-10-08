@@ -290,12 +290,21 @@ func getOtp(key string, output string) {
 		if output == "simple" {
 			fmt.Println(otp)
 		} else {
+			fmt.Printf("Your otp is: %s\n", Green(otp))
+
+			//Checking if the pbcopy command is on the system.
+			_, err := exec.LookPath("pbcopy")
+			if err != nil {
+				return nil
+			}
+
 			//Copies the otp generated to your clipboard
 			err = exec.Command("bash", "-c", fmt.Sprintf("echo %s | tr -d \"\n, \" | pbcopy", otp)).Run()
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Your otp is: %s\n%s has been copied to your clipboard\n", Green(otp), Green(otp))
+			
+			fmt.Printf("%s has been copied to your clipboard\n", Green(otp))
 		}
 
 		return nil
@@ -394,7 +403,7 @@ func queryJson(query string) {
 		for _, k := range keys {
 			key = string(k)
 			if query == "" || strings.Contains(key, query) {
-				items.AddTo("Remove "+key, "rm " + key)
+				items.AddTo("Remove "+key, "rm "+key)
 			}
 		}
 	}
