@@ -46,7 +46,7 @@ func Colour(colour, text string) string {
 	return fmt.Sprintf(colours[colour], fmt.Sprint(text))
 }
 
-// addTo adds an Alfred style json item to the Items struct.
+// addTo adds an Alfred style JSON item to the Items struct.
 func (i *Items) addTo(title, key string) []Item {
 	i.Items = append(i.Items, Item{
 		Type:         "default",
@@ -133,7 +133,7 @@ func main() {
 	queryOtp(args, "terminal")
 }
 
-// prompt shows a promt of all the keys available with the ability to choose a key using the keyboard
+// prompt shows a prompt of all the keys available with the ability to choose a key using the keyboard
 func prompt() {
 	keys := getKeyList()
 
@@ -274,7 +274,7 @@ func removeKeyByIndex(index int) {
 }
 
 // queryOtp takes in query and finds the first key associated to it.
-// Depnding on the output the a key will be output or removed depending on if the output is simple, terminal or rm
+// Depending on the output the a key will be output or removed depending on if the output is simple, terminal or rm
 func queryOtp(query []string, output string) {
 	var key string
 	err := db.View(func(txn *badger.Txn) error {
@@ -388,7 +388,7 @@ func getOtpByIndex(index int) {
 	getOtp(key, "terminal")
 }
 
-// listJson outputs Alfred style json of the keys available.
+// listJson outputs Alfred style JSON of the keys available.
 func listJson() {
 	items := new(Items)
 
@@ -419,7 +419,7 @@ func listJson() {
 	fmt.Println(string(b))
 }
 
-// queryJson outputs Alfred style json of the keys available filtered by a query.
+// queryJson outputs Alfred style JSON of the keys available filtered by a query.
 func queryJson(query []string) {
 	var key string
 	var action string

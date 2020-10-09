@@ -3,7 +3,7 @@
 # gotp
 Handling Google Authenticator codes in your terminal
 
-![Walkthrough](https://raw.githubusercontent.com/itsmewes/gotp/master/images/gotp-walkthrough.gif "Walkthrough")
+![Walkthrough](https://raw.githubusercontent.com/itsmewes/gotp/master/images/gotp-walkthrough.gif "Walk through")
 
 ## Getting started
 
@@ -54,14 +54,13 @@ gotp 2
 ```
 The main difference between the above commands is that `get` is a simple returning/printing of the key where without `get` the key is added to your clipboard and prints out a statement of the key being added to your clipboard. The simplified version (with the `get` key word) is for piping to other utilities.
 
-Gotp tries to find the right key based on a very basic fuzzy search. For example if you have two keys, one for local and one for production you may have two entries like the following `website - local` and `website - production`, if you type `gotp web prod` gotp will get the opt for `website - production`.
+Gotp tries to find the right key based on a very basic fuzzy search. For example if you have two keys, one for local and one for production you may have two entries like the following `website - local` and `website - production`, if you type `gotp web prod` gotp will get the otp for `website - production`.
 
 ### Get OTP via prompt
 ```
 gotp 
 ```
 If you only type `gotp` a prompt will be brought up of the keys that have been stored. You can use this prompt to select the key you want to use.
-The prompt being used is "github.com/manifoldco/promptui".
 
 ### Remove keys
 ```
@@ -75,14 +74,14 @@ gotp rm 2
 Gotp uses the same basic fuzzy searching for removing keys as it does for getting them.
 
 ## Usage for Alfred
-There are some commands that I have added in so I can use this tool in conjuction with Alfred (a Mac app utility.)
+There are some commands that I have added in so I can use this tool in conjunction with Alfred (a Mac app utility.)
 
-### List keys, return in json format
+### List keys, return in JSON format
 ```
 gotp lsJson
 ```
 
-### Search for keys, return in json format
+### Search for keys, return in JSON format
 ```
 gotp queryJson query
 ```
