@@ -53,6 +53,7 @@ or you could use the index from `gotp ls`
 gotp 2
 ```
 The main difference between the above commands is that `get` is a simple returning/printing of the key where without `get` the key is added to your clipboard and prints out a statement of the key being added to your clipboard. The simplified version (with the `get` key word) is for piping to other utilities.
+
 Gotp tries to find the right key based on a very basic fuzzy search. For example if you have two keys, one for local and one for production you may have two entries like the following `website - local` and `website - production`, if you type `gotp web prod` gotp will get the opt for `website - production`.
 
 ### Get OTP via prompt
