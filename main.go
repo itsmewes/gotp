@@ -109,13 +109,13 @@ func main() {
 		}
 
 		l := len(args)
-		removeKey(strings.Join(args[1:l], " "))
+		queryOtp(args[1:l], "rm")
 		return
 	}
 
 	if args[0] == "get" {
 		l := len(args)
-		getOtp(strings.Join(args[1:l], " "), "simple")
+		queryOtp(args[1:l], "simple")
 		return
 	}
 
@@ -130,7 +130,7 @@ func main() {
 		return
 	}
 
-	getOtp(strings.Join(args, " "), "terminal")
+	queryOtp(args, "terminal")
 }
 
 // prompt shows a promt of all the keys available with the ability to choose a key using the keyboard
@@ -219,7 +219,7 @@ func addToken(key string, secret string) {
 		return
 	}
 
-	fmt.Println("Your key and secret have been saved")
+	fmt.Println(Colour("Green", "Your key and secret have been saved"))
 }
 
 // removeKey removes a key.
@@ -273,7 +273,39 @@ func removeKeyByIndex(index int) {
 	}
 }
 
+// queryOtp takes in query and finds the first key associated to it.
+// Depnding on the output the a key will be output or removed depending on if the output is simple, terminal or rm
+func queryOtp(query []string, output string) {
+	var key string
+	err := db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			key = string(item.Key())
+
+			if testQuery(query, key) {
+				return nil
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(Colour("Red", err.Error()))
+	}
+
+	if output == "rm" {
+		removeKey(key)
+	} else {
+		getOtp(key, output)
+	}
+}
+
 // getOtp takes in a key and output type and returns the otp.
+// The otp's format is based on the type of output passed in, simple or terminal.
 func getOtp(key string, output string) {
 	err := db.View(func(txn *badger.Txn) error {
 		var token string
@@ -295,7 +327,7 @@ func getOtp(key string, output string) {
 		if output == "simple" {
 			fmt.Println(otp)
 		} else {
-			fmt.Printf("Your otp is: %s\n", Colour("Green", otp))
+			fmt.Printf("Your otp for %s is: %s\n", Colour("Blue", key), Colour("Green", otp))
 
 			//Checking if the pbcopy command is on the system.
 			_, err := exec.LookPath("pbcopy")
