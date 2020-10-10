@@ -43,7 +43,7 @@ func Colour(colour, text string) string {
 		"Magenta": "\033[1;35m%s\033[0m",
 	}
 
-	return fmt.Sprintf(colours[colour], fmt.Sprint(text))
+	return fmt.Sprintf(colours[colour], text)
 }
 
 // addTo adds an Alfred style JSON item to the Items struct.
@@ -203,7 +203,7 @@ func listKeys() {
 }
 
 // addToken takes in a key and secret and adds a token to the db.
-func addToken(key string, secret string) {
+func addToken(key ,secret string) {
 	txn := db.NewTransaction(true)
 	defer txn.Discard()
 
@@ -287,7 +287,7 @@ func queryOtp(query []string, output string) {
 			key = string(item.Key())
 
 			if testQuery(query, key) {
-				return nil
+				break
 			}
 		}
 		return nil
