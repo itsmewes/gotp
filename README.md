@@ -74,7 +74,7 @@ gotp rm 2
 Gotp uses the same basic fuzzy searching for removing keys as it does for getting them.
 
 ## Usage for Alfred
-There are some commands that I have added in so I can use this tool in conjunction with Alfred (a Mac app utility.)
+There are some commands that I have added in so I can use this tool in conjunction with Alfred (a Mac app utility.) You can find the Alfred workflow on [Packal](https://www.packal.org/workflow/gotp)
 
 ### List keys, return in JSON format
 ```
