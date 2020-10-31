@@ -59,6 +59,7 @@ func (i *Items) addTo(title, key string) []Item {
 }
 
 func main() {
+	const version = "0.6.1"
 	var err error
 	flag.Parse()
 	args := flag.Args()
@@ -72,6 +73,11 @@ func main() {
 
 	if len(args) == 0 {
 		prompt()
+		return
+	}
+
+	if args[0] == "v" || args[0] == "version" {
+		fmt.Printf("%s %s\n", Colour("Green", "Version"), Colour("Blue", version))
 		return
 	}
 
@@ -203,7 +209,7 @@ func listKeys() {
 }
 
 // addToken takes in a key and secret and adds a token to the db.
-func addToken(key ,secret string) {
+func addToken(key, secret string) {
 	txn := db.NewTransaction(true)
 	defer txn.Discard()
 
@@ -424,6 +430,7 @@ func queryJson(query []string) {
 	var key string
 	var action string
 
+	matchAdd := false
 	items := new(Items)
 	keys := getKeyList()
 	l := len(query)
@@ -432,12 +439,7 @@ func queryJson(query []string) {
 		action = query[0]
 	}
 
-	matchAdd, _ := regexp.MatchString("^ad?d?", action)
-	if matchAdd {
-		items.addTo("Add", strings.Join(query, " "))
-	}
-
-	matchRm, _ := regexp.MatchString("^rm?", action)
+	matchRm, _ := regexp.MatchString("^rm", action)
 	if matchRm {
 		for _, k := range keys {
 			key = string(k)
@@ -447,7 +449,7 @@ func queryJson(query []string) {
 		}
 	}
 
-	if l == 0 || (!matchAdd && !matchRm) {
+	if l == 0 || (!matchRm) {
 		for _, k := range keys {
 			key = string(k)
 			if l == 0 || testQuery(query, key) {
@@ -455,6 +457,23 @@ func queryJson(query []string) {
 			}
 		}
 	}
+
+	if l > 0 {
+		matchAdd, _ = regexp.MatchString("^ad?d?", query[0])
+	}
+
+	if l == 0 {
+		query = append(query, "add")
+	} else if l == 1 && matchAdd {
+		query[0] = "add "
+	} else if l > 1 && matchAdd {
+		query[0] = "add"
+	} else {
+		query = append(query, query[0])
+		query[0] = "add"
+	}
+
+	items.addTo("Add", strings.Join(query, " "))
 
 	b, err := json.Marshal(items)
 	if err != nil {
