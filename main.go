@@ -526,7 +526,11 @@ func getToken(secret string) string {
 	//subset of the twenty-six letters A–Z and ten digits 0–9
 	key, err := base32.StdEncoding.DecodeString(strings.ToUpper(secret))
 	if err != nil {
-		fmt.Println(Colour("Red", err.Error()))
+		key, err = base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
+
+		if err != nil {
+			fmt.Println(Colour("Red", err.Error()))
+		}
 	}
 	bs := make([]byte, 8)
 	binary.BigEndian.PutUint64(bs, uint64(interval))
