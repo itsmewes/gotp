@@ -59,7 +59,7 @@ func (i *Items) addTo(title, key string) []Item {
 }
 
 func main() {
-	const version = "0.6.1"
+	const version = "0.7.1"
 	var err error
 	flag.Parse()
 	args := flag.Args()
@@ -376,6 +376,7 @@ func getOtpByIndex(index int) {
 			key = string(item.Key())
 
 			it.Close()
+			break
 		}
 
 		return nil
